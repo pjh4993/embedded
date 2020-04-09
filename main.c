@@ -25,9 +25,9 @@ int main() {
     int gpio_4_value;
     uint32_t cnt = 0;
     while(1) {
-        set_gpio_output_value(gpio_ctr, 13, (cnt+1)%3);
-        set_gpio_output_value(gpio_ctr, 19, (cnt+2)%3);
-        set_gpio_output_value(gpio_ctr, 26, (cnt+3)%3);
+        set_gpio_output_value(gpio_ctr, 19, clock[(cnt+1)%3]);
+        set_gpio_output_value(gpio_ctr, 13, clock[(cnt+2)%3]);
+        set_gpio_output_value(gpio_ctr, 26, clock[(cnt+3)%3]);
         while(!gpio_4_value)
             get_gpio_input_value(gpio_ctr, 4, &gpio_4_value);
         cnt += 1;
