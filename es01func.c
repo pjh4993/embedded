@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdint.h>
+
 void set_gpio_input(void *gpio_ctr, int gpio_nr) { 
 	int reg_id = gpio_nr / 10; 
 	int pos = gpio_nr % 10;
@@ -37,14 +42,13 @@ void get_gpio_input_value(void *gpio_ctr, int gpio_nr, int *value) {
 void set_gpio_output_value(void *gpio_ctr, int gpio_nr, int value) {
 	int reg_id = gpio_nr / 32;
 	int pos = gpio_nr % 32;
-	if(value) { 
-		#define GPIO_SET_OFFSET 0x1c 
-			uint32_t* output_set = (uint32_t*) (gpio_ctr + GPIO_SET_OFFSET + 0x4 * reg_id); *output_set = 0x1 << pos; 
-		} else { 
-			#define GPIO_CLR_OFFSET 0x28 
-			uint32_t* output_clr = (uint32_t*) (gpio_ctr + GPIO_CLR_OFFSET + 0x4 * reg_id); *output_clr = 0x1 << pos; 
-		}
-	}
+    if(value) { 
+        #define GPIO_SET_OFFSET 0x1c 
+        uint32_t* output_set = (uint32_t*) (gpio_ctr + GPIO_SET_OFFSET + 0x4 * reg_id); *output_set = 0x1 << pos; 
+    } else { 
+        #define GPIO_CLR_OFFSET 0x28 
+        uint32_t* output_clr = (uint32_t*) (gpio_ctr + GPIO_CLR_OFFSET + 0x4 * reg_id); *output_clr = 0x1 << pos; 
+    }
 }
 
 void set_gpio_pullup(void *gpio_ctr, int gpio_nr) { 

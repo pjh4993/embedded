@@ -1,5 +1,17 @@
 #define PERIPHERAL_BASE 0x3F000000UL
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+void set_gpio_output(void*, int);
+void set_gpio_output_value(void*, int, int);
+void set_gpio_input(void *, int);
+void get_gpio_input_value(void *, int , int *);
+void set_gpio_pullup(void *, int);
 
 int main() {
     int fdmem = open("/dev/mem", O_RDWR);
