@@ -18,3 +18,4 @@ clear: $(OBJclear)
 clean:
 	rm -rf switch
 	rm -rf clear
+	rm -rf *.o
