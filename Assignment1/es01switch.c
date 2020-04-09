@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define BLUE 13
+#define GREEN 19
+#define RED 26
+
 void set_gpio_output(void*, int);
 void set_gpio_output_value(void*, int, int);
 void set_gpio_input(void *, int);
@@ -37,13 +41,20 @@ int main() {
     int gpio_4_value = 0;
     uint32_t cnt = 0;
     while(1) {
-        set_gpio_output_value(gpio_ctr, 19, clock[(cnt+1)%3]);
-        set_gpio_output_value(gpio_ctr, 13, clock[(cnt+2)%3]);
-        set_gpio_output_value(gpio_ctr, 26, clock[(cnt+3)%3]);
+        set_gpio_output_value(gpio_ctr, BLUE, clock[(cnt+1)%3]);
+        set_gpio_output_value(gpio_ctr, GREEN, clock[(cnt+2)%3]);
+        set_gpio_output_value(gpio_ctr, RED, clock[(cnt)%3]);
+        //스위치가 떨어질떄까지 루프
         while(!gpio_4_value)
             get_gpio_input_value(gpio_ctr, 4, &gpio_4_value);
+        printf("switch detached\n");
+        //스위치가 눌릴때까지 루프
         while(gpio_4_value)
             get_gpio_input_value(gpio_ctr, 4, &gpio_4_value);
+        printf("switch attached\n");
+        printf("---------------------------\n");
+        //스위치 민감도 조절
+        usleep(300000);
         cnt += 1;
     }
 
