@@ -76,12 +76,15 @@ int buf_top = 0;
 
 ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t * off) {
     size_t left;
-    int top = buf_top;
-    
-    size_t top_sz = (top > buf_btm ? top : 1024) - buf_btm;
-    size_t btm_sz = (top > buf_btm ? 0 : top);
-
+    size_t top_sz;
+    size_t btm_sz;
+    int top;
+   
+    top = buf_top;
     left = size;
+    top_sz = (top > buf_btm ? top : 1024) - buf_btm;
+    btm_sz = (top > buf_btm ? 0 : top);
+
     if (top_sz > 0){
         top_sz = (top_sz > left ? left : top_sz);
         copy_to_user(buf + buf_btm, buffer, top_sz);
@@ -94,7 +97,7 @@ ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t *
         copy_to_user(buf + buf_btm, buffer, btm_sz);
         buf_btm = (buf_btm + btm_sz) & 1023;
     }
-	return top_sz + btm_sz;
+    return top_sz + btm_sz;
 }
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
