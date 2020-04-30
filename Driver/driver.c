@@ -94,7 +94,7 @@ ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t *
         copy_to_user(buf + buf_btm, buffer, btm_sz);
         buf_btm = (buf_btm + btm_sz) & 1023;
     }
-	return top_sz + btm_sz;
+    return top_sz + btm_sz;
 }
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
