@@ -42,18 +42,60 @@ static int rpikey_release(struct inode *inode, struct file *file) {
     return 0;
 }
 
+//일단 ppt 복붙
 long rpikey_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
-    //??
+    if (ioctl_num == 101){//write
+        uint32_t param_value[2]; 
+        param_value[0] = gpio_get_value(20); 
+        param_value[1] = gpio_get_value(21);
+        copy_to_user((void*) ioctl_param, (void*) param_value, sizeof(uint32_t)*2);
+    }
+    
+    if (ioctl_num == 100){//read
+        uint32_t param_value[3];
+        int gpio13;
+        int gpio19;
+        int gpio26;
+
+        copy_from_user((void*) param_value, (void*) ioctl_param, sizeof(uint32_t)*3);
+
+        gpio13 = (int)param_value[0];
+        gpio19 = (int)param_value[1];
+        gpio26 = (int)param_value[2];
+
+        gpio_set_value(13,gpio13);
+        gpio_set_value(19,gpio19);
+        gpio_set_value(26,gpio26);
+    }
+    return 0;
 }
+
+char buf[1024];
+int buf_btm = 0;
+int buf_top = 0;
 
 ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t * off) {
+    size_t left;
+    int top = buf_top;
+    
+    size_t top_sz = (top > buf_btm ? top : 1024) - buf_btm;
+    size_t btm_sz = (top > buf_btm ? 0 : top);
 
+    left = size;
+    if (top_sz > 0){
+        top_sz = (top_sz > left ? left : top_sz);
+        copy_to_user(buf + buf_btm, buffer, top_sz);
+        buf_btm = (buf_btm + top_sz) & 1023;
+        left = size - top_sz;
+    }
 
-	return 0;
+    if (btm_sz > 0){
+        btm_sz = (btm_sz > left ? left : btm_sz);
+        copy_to_user(buf + buf_btm, buffer, btm_sz);
+        buf_btm = (buf_btm + btm_sz) & 1023;
+    }
+	return top_sz + btm_sz;
 }
-
-char* buf = NULL;
-int buflen = 0;
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
     size_t it;
@@ -63,7 +105,9 @@ ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, l
         int gpio19 = 0;//g
         int gpio26 = 0;//r
 
-        get_user(c, buffer + it);
+        //read failed
+        if(!get_user(c, buffer + it))
+            break;
         
         if (*c == 'r') {
             gpio26 = 1;
@@ -75,12 +119,12 @@ ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, l
             continue;
         }
 
-        set_gpio_output_value(gpio_ctr, 13, gpio13);
-        set_gpio_output_value(gpio_ctr, 19, gpio19);
-        set_gpio_output_value(gpio_ctr, 26, gpio26);
+        gpio_set_value(13, gpio13);
+        gpio_set_value(19, gpio19);
+        gpio_set_value(26, gpio26);
         delay(1);
     }
-    return 0;
+    return size - it;
 }
 
 struct file_operations Fops = {
@@ -101,14 +145,14 @@ struct file_operations Fops = {
 static int irq_gpio20 = -1, irq_gpio21 = -1;
 static void *dev_id_gpio20, *dev_id_gpio21;
 
+
+
 static irqreturn_t irq_handler(int irq, void *dev_id) {
-    if(buf == NULL)
-        buf = kmalloc(1024, GFP_KERNEL);
     if(dev_id == dev_id_gpio20)
-        buf[buflen] = '0';
+        buf[buf_top] = '0';
     else
-        buf[buflen] = '1';
-    buflen++;
+        buf[buf_top] = '1';
+    buf_top = (buf_top + 1) & 1023;
     return IRQ_HANDLED;
 }
 
