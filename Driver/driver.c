@@ -52,7 +52,8 @@ ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t *
 	return 0;
 }
 
-char buff[32];
+char* buf = NULL;
+int buflen = 0;
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
     size_t it;
@@ -97,9 +98,19 @@ struct file_operations Fops = {
 #define PERIPHERAL_BASE 0x3F000000UL
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 
-static int majorNumber;
-static struct class* cRpiKeyClass = NULL;
-static struct device* cRpiKeyDevice = NULL;
+static int irq_gpio20 = -1, irq_gpio21 = -1;
+static void *dev_id_gpio20, *dev_id_gpio21;
+
+static irqreturn_t irq_handler(int irq, void *dev_id) {
+    if(buf == NULL)
+        buf = kmalloc(1024, GFP_KERNEL);
+    if(dev_id == dev_id_gpio20)
+        buf[buflen] = '0';
+    else
+        buf[buflen] = '1';
+    buflen++;
+    return IRQ_HANDLED;
+}
 
 static int __init rpikey_init(void) {
     pr_info("rpikey module installed\n");
@@ -134,7 +145,8 @@ static int __init rpikey_init(void) {
     set_gpio_pullup(gpio_ctr, 20);
     set_gpio_pullup(gpio_ctr, 21);
 
-    //??
+    request_irq(irq_gpio20, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw20", dev_id_gpio20);
+    request_irq(irq_gpio21, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw21", dev_id_gpio21);
 
     return 0;
 }
@@ -142,7 +154,13 @@ static int __init rpikey_init(void) {
 static void __exit rpikey_exit(void) {
     iounmap(gpio_ctr);
 
-    //??
+    if(irq_gpio20 < 0)
+        free_irq(irq_gpio20, dev_id_gpio20);
+    if(irq_gpio21 < 0)
+        free_irq(irq_gpio21, dev_id_gpio21);
+    kfree(buf);
+    buf = NULL;
+    buflen = 0;
 
     gpio_free(13);
     gpio_free(19);
