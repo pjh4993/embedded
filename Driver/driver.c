@@ -16,6 +16,21 @@ MODULE_LICENCE("GPL");
 void* gpio_ctr = NULL;
 
 void set_gpio_pullup(void *gpio_ctr, int gpio_nr) {
+    int reg_id = gpio_nr / 32;
+    int pos = gpio_nr % 32;
+
+#define GPIO_PUD_OFFSET 0x94
+#define GPIO_PUDCLK_OFFSET 0x98
+    uint32_t *pud_reg = (uint32_t*) (gpio_ctr + GPIO_PUD_OFFSET);
+    uint32_t* pudclk_reg = (uint32_t*) (gpio_ctr + GPIO_PUDCLK_OFFSET + 0x4 * reg_id);
+
+#define GPIO_PUD_PULLUP 0x2
+    *pud_reg = GPIO_PUD_PULLUP;
+    udelay(1);
+    *pudclk_reg = (0x1 << pos);
+    udelay(1);
+    *pud_reg = 0;
+    *pudclk_reg = 0;
 }
 
 
