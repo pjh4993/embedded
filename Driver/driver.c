@@ -74,14 +74,15 @@ int buf_btm = 0;
 int buf_top = 0;
 
 ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t * off) {
+    size_t len = buf_top > size ? size : buf_top;
     pr_info("read started\n");
-    buf[buf_top] = '\0';
+    buf[len] = '\0';
     pr_info("%s\n",buf);
-    copy_to_user(buffer, buf, buf_top);
+    copy_to_user(buffer, buf, len);
 
-    pr_info("read size : %d\n",buf_top);
+    pr_info("read size : %d\n",len);
     buf_top = 0;
-    return buf_top;
+    return size;
 }
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
