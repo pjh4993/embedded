@@ -11,7 +11,6 @@
 #include <linux/uaccess.h>
 #include <asm/io.h>
 
-MODULE_LICENCE("GPL");
 
 void* gpio_ctr = NULL;
 
@@ -101,36 +100,39 @@ ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t *
 }
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
-    size_t it;
-    char * c;
-	for (size_t it = 0; it < size; it++){
-        int gpio13 = 0;//b
-        int gpio19 = 0;//g
-        int gpio26 = 0;//r
+	size_t it=0;
+    char user_buffer[size];
+    pr_info("size of input %d",size);
+    //fail to read from user space
+    if(copy_from_user((void*)user_buffer, (void*)buffer, size))
+        return -EFAULT;
 
-        //read failed
-        if(!get_user(c, buffer + it))
-            break;
-        
-        if (*c == 'r') {
-            gpio26 = 1;
-        } else if (*c == 'g') {
-            gpio19 = 1;
-        } else if (*c == 'b') {
-            gpio13 = 1;
-        } else if (*c != 'o'){
-            continue;
-        }
+    int gpio13, gpio19, gpio26;
+    for (it = 0; it < size; it++){
+	    gpio13 = 0;//b
+	    gpio19 = 0;//g
+	    gpio26 = 0;//r
+	    char c = user_buffer[it];
 
-        gpio_set_value(13, gpio13);
-        gpio_set_value(19, gpio19);
-        gpio_set_value(26, gpio26);
-        delay(1);
+	    if (c == 'r') {
+		    gpio26 = 1;
+	    } else if (c == 'g') {
+		    gpio19 = 1;
+	    } else if (c == 'b') {
+		    gpio13 = 1;
+	    } else if (c != 'o'){
+		    continue;
+	    }
+
+	    gpio_set_value(13, gpio13);
+	    gpio_set_value(19, gpio19);
+	    gpio_set_value(26, gpio26);
+	    udelay(1000);
     }
     return size - it;
 }
 
-struct file_operations Fops = {
+struct file_operations key_fops = {
     .unlocked_ioctl = rpikey_ioctl,
     .open = rpikey_open,
     .read = rpikey_read,
@@ -147,7 +149,8 @@ struct file_operations Fops = {
 
 static int irq_gpio20 = -1, irq_gpio21 = -1;
 static void *dev_id_gpio20, *dev_id_gpio21;
-
+static int majorNumber;
+static struct class *cRpiKeyClass;
 
 
 static irqreturn_t irq_handler(int irq, void *dev_id) {
@@ -169,7 +172,7 @@ static int __init rpikey_init(void) {
     }
 
     cRpiKeyClass = class_create(THIS_MODULE, CLASS_NAME);
-    cRpiKeyDevice = device_create(cRpiKeyClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+    device_create(cRpiKeyClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
 
     gpio_request(13, "gpio13");
     gpio_request(19, "gpio19");
@@ -201,13 +204,14 @@ static int __init rpikey_init(void) {
 static void __exit rpikey_exit(void) {
     iounmap(gpio_ctr);
 
-    if(irq_gpio20 < 0)
+    if(irq_gpio20 < 0){
+		pr_info("free irq 20");
         free_irq(irq_gpio20, dev_id_gpio20);
-    if(irq_gpio21 < 0)
+	}
+    if(irq_gpio21 < 0){
+		pr_info("free irq 21");
         free_irq(irq_gpio21, dev_id_gpio21);
-    kfree(buf);
-    buf = NULL;
-    buflen = 0;
+	}
 
     gpio_free(13);
     gpio_free(19);
@@ -216,39 +220,11 @@ static void __exit rpikey_exit(void) {
     gpio_free(21);
 
     device_destroy(cRpiKeyClass, MKDEV(majorNumber, 0));
-    class_unregiser(cRpiKeyClass);
+    class_unregister(cRpiKeyClass);
     class_destroy(cRpiKeyClass);
     unregister_chrdev(majorNumber, DEVICE_NAME);
 }
 
 module_init(rpikey_init);
 module_exit(rpikey_exit);
-
-/*
-long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
-    if(ioctl_num == 100) {
-        uint32_t param_value[2];
-        param_value[0] = gpio_get_value(20);
-        param_value[1] = gpio_get_value(21);
-
-        copy_to_user((void*)ioctl_param, (void*)param_value, sizeof(uint32_t)*2);
-    }
-
-    if(ioctl_num == 101) {
-        uint32_t param_value[3];
-        int gpio13, gpio19, gpio26;
-
-        copy_from_user((void*)param_value, (void*)ioctl_param, sizeof(uint32_t)*3);
-
-        gpio13 = (int)param_value[0];
-        gpio19 = (int)param_value[1];
-        gpio26 = (int)param_value[2];
-
-        gpio_set_value(13, gpio13);
-        gpio_set_value(19, gpio19);
-        gpio_set_value(26, gpio26);
-    }
-
-    return 0;
-}
-*/
+MODULE_LICENSE("GPL");
