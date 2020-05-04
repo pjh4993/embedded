@@ -147,13 +147,13 @@ struct file_operations key_fops = {
 #define PERIPHERAL_BASE 0x3F000000UL
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 
-static int irq_gpio20 = -1, irq_gpio21 = -1;
+static unsigned int irq_gpio20 = 0, irq_gpio21 = 0;
 static void *dev_id_gpio20, *dev_id_gpio21;
 static int majorNumber;
 static struct class *cRpiKeyClass;
 
 
-static irqreturn_t irq_handler(int irq, void *dev_id) {
+static irqreturn_t irq_handler(unsigned int irq, void *dev_id) {
     if(dev_id == dev_id_gpio20)
         buf[buf_top] = '0';
     else
@@ -204,14 +204,16 @@ static int __init rpikey_init(void) {
 static void __exit rpikey_exit(void) {
     iounmap(gpio_ctr);
 
-    if(irq_gpio20 < 0){
-		pr_info("free irq 20");
+    if(irq_gpio20){
+	pr_info("free irq 20");
         free_irq(irq_gpio20, dev_id_gpio20);
-	}
-    if(irq_gpio21 < 0){
-		pr_info("free irq 21");
+        irq_gpio20 = 0;
+    }
+    if(irq_gpio21){
+	pr_info("free irq 21");
         free_irq(irq_gpio21, dev_id_gpio21);
-	}
+        irq_gpio21 = 0;
+    }
 
     gpio_free(13);
     gpio_free(19);
