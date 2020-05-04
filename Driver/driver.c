@@ -74,62 +74,48 @@ int buf_btm = 0;
 int buf_top = 0;
 
 ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t * off) {
-    size_t left;
-    size_t top_sz;
-    size_t btm_sz;
-    int top;
-   
-    top = buf_top;
-    left = size;
-    top_sz = (top > buf_btm ? top : 1024) - buf_btm;
-    btm_sz = (top > buf_btm ? 0 : top);
+    pr_info("read started\n");
+    buf[buf_top] = '\0';
+    pr_info("%s\n",buf);
+    copy_to_user(buffer, buf, buf_top);
 
-    if (top_sz > 0){
-        top_sz = (top_sz > left ? left : top_sz);
-        copy_to_user(buf + buf_btm, buffer, top_sz);
-        buf_btm = (buf_btm + top_sz) & 1023;
-        left = size - top_sz;
-    }
-
-    if (btm_sz > 0){
-        btm_sz = (btm_sz > left ? left : btm_sz);
-        copy_to_user(buf + buf_btm, buffer, btm_sz);
-        buf_btm = (buf_btm + btm_sz) & 1023;
-    }
-    return top_sz + btm_sz;
+    pr_info("read size : %d\n",buf_top);
+    buf_top = 0;
+    return buf_top;
 }
 
 ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
-	size_t it=0;
-    char user_buffer[size];
-    pr_info("size of input %d",size);
-    //fail to read from user space
-    if(copy_from_user((void*)user_buffer, (void*)buffer, size))
-        return -EFAULT;
+  size_t it=0;
+  char user_buffer[size];
+  pr_info("size of input %d\n",size);
+  //fail to read from user space
+  if(copy_from_user((void*)user_buffer, (void*)buffer, size))
+    return -EFAULT;
 
-    int gpio13, gpio19, gpio26;
-    for (it = 0; it < size; it++){
-	    gpio13 = 0;//b
-	    gpio19 = 0;//g
-	    gpio26 = 0;//r
-	    char c = user_buffer[it];
+  int gpio13, gpio19, gpio26;
+  for (it = 0; it < size; it++){
+    gpio13 = 0;//b
+    gpio19 = 0;//g
+    gpio26 = 0;//r
+    char c = user_buffer[it];
 
-	    if (c == 'r') {
-		    gpio26 = 1;
-	    } else if (c == 'g') {
-		    gpio19 = 1;
-	    } else if (c == 'b') {
-		    gpio13 = 1;
-	    } else if (c != 'o'){
-		    continue;
-	    }
-
-	    gpio_set_value(13, gpio13);
-	    gpio_set_value(19, gpio19);
-	    gpio_set_value(26, gpio26);
-	    udelay(1000);
+    if (c == 'r') {
+      gpio26 = 1;
+    } else if (c == 'g') {
+      gpio19 = 1;
+    } else if (c == 'b') {
+      gpio13 = 1;
+    } else if (c != 'o'){
+      continue;
     }
-    return it;
+
+    gpio_set_value(13, gpio13);
+    gpio_set_value(19, gpio19);
+    gpio_set_value(26, gpio26);
+    pr_info("b:%d g:%d r:%d\n",gpio13, gpio19, gpio26);
+    udelay(1000);
+  }
+  return it;
 }
 
 struct file_operations key_fops = {
@@ -139,6 +125,9 @@ struct file_operations key_fops = {
     .write = rpikey_write, 
     .release = rpikey_release,
 };
+typedef struct Device {
+  int device_id;
+}device;
 
 #define MAJOR_NUM 0
 #define DEVICE_NAME "rpikey"
@@ -148,17 +137,19 @@ struct file_operations key_fops = {
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 
 static unsigned int irq_gpio20 = 0, irq_gpio21 = 0;
-static void *dev_id_gpio20, *dev_id_gpio21;
+static device dev_id_gpio20={.device_id = 20}, dev_id_gpio21={.device_id = 21};
 static int majorNumber;
 static struct class *cRpiKeyClass;
 
 
-static irqreturn_t irq_handler(unsigned int irq, void *dev_id) {
-    if(dev_id == dev_id_gpio20)
+static irqreturn_t irq_handler(int irq, void *dev_id) {
+    pr_info("irq handled %d\n",((device*)dev_id)->device_id);
+    if(dev_id == &dev_id_gpio20)
         buf[buf_top] = '0';
     else
         buf[buf_top] = '1';
     buf_top = (buf_top + 1) & 1023;
+    pr_info("buf_top cur : %d\n",buf_top);
     return IRQ_HANDLED;
 }
 
@@ -195,8 +186,10 @@ static int __init rpikey_init(void) {
     set_gpio_pullup(gpio_ctr, 20);
     set_gpio_pullup(gpio_ctr, 21);
 
-    request_irq(irq_gpio20, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw20", dev_id_gpio20);
-    request_irq(irq_gpio21, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw21", dev_id_gpio21);
+    int result_20 = request_irq(irq_gpio20, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw20",(void*)&dev_id_gpio20);
+    int result_21 = request_irq(irq_gpio21, irq_handler, IRQF_SHARED | IRQF_TRIGGER_FALLING, "sw21",(void*)&dev_id_gpio21);
+
+    pr_info("result of irq %d %d\n",result_20, result_21);
 
     return 0;
 }
@@ -204,26 +197,26 @@ static int __init rpikey_init(void) {
 static void __exit rpikey_exit(void) {
     iounmap(gpio_ctr);
 
-    if(irq_gpio20){
-	pr_info("free irq 20");
-        free_irq(irq_gpio20, dev_id_gpio20);
-        irq_gpio20 = 0;
-    }
-    if(irq_gpio21){
-	pr_info("free irq 21");
-        free_irq(irq_gpio21, dev_id_gpio21);
-        irq_gpio21 = 0;
-    }
-
     gpio_free(13);
     gpio_free(19);
     gpio_free(26);
     gpio_free(20);
     gpio_free(21);
 
+    if(irq_gpio20){
+	pr_info("free irq 20 %d\n", irq_gpio20);
+        free_irq(irq_gpio20, &dev_id_gpio20);
+        irq_gpio20 = 0;
+    }
+    if(irq_gpio21){
+	pr_info("free irq 21 %d\n", irq_gpio21);
+        free_irq(irq_gpio21, &dev_id_gpio21);
+        irq_gpio21 = 0;
+    }
+
+
     device_destroy(cRpiKeyClass, MKDEV(majorNumber, 0));
     class_unregister(cRpiKeyClass);
-    class_destroy(cRpiKeyClass);
     unregister_chrdev(majorNumber, DEVICE_NAME);
 }
 
