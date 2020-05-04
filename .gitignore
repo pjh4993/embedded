@@ -3,7 +3,6 @@ switch
 clear
 *.mp4
 *.tar.gz
-buildroot/*
 .*
 Module.*
 modules.*
