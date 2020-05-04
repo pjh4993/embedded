@@ -206,12 +206,12 @@ static void __exit rpikey_exit(void) {
     if(irq_gpio20){
 	pr_info("free irq 20 %d\n", irq_gpio20);
         free_irq(irq_gpio20, &dev_id_gpio20);
-        irq_gpio20 = 0;
+        irq_gpio20 = 0, dev_id_gpio20 = NULL;
     }
     if(irq_gpio21){
 	pr_info("free irq 21 %d\n", irq_gpio21);
         free_irq(irq_gpio21, &dev_id_gpio21);
-        irq_gpio21 = 0;
+        irq_gpio21 = 0, dev_id_gpio21 = NULL;
     }
 
 
