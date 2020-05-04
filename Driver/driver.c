@@ -129,7 +129,7 @@ ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, l
 	    gpio_set_value(26, gpio26);
 	    udelay(1000);
     }
-    return size - it;
+    return it;
 }
 
 struct file_operations key_fops = {
