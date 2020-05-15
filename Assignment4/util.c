@@ -2,7 +2,6 @@
 #define S_HEIGHT    64
 #define S_PAGES     (S_HEIGHT/8)
 
-#include "skku.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +10,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
-
+#include <error.h>
+#include <errno.h>
 #define SSD1306_I2C_DEV 0x3C
 
 void ssd1306_Init(int i2c_fd);
@@ -59,8 +59,10 @@ void ssd1306_command(int i2c_fd, uint8_t cmd){
     uint8_t buffer[2];
     buffer[0] = (0<<7) | (0<<6);
     buffer[1] = cmd;
-    if(write(i2c_fd, buffer, 2) != 2){
-        printf("i2c write failed\n");
+    int len = write(i2c_fd, buffer, 2);
+    if(len != 2){
+        printf("i2c write failed in CMD %d\n",len);
+        printf("error : %s",strerror(errno));
     }
 }
 
@@ -69,7 +71,7 @@ void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size){
     buffer[0] = (0<<7) | (1<<6);
     memcpy(buffer + 1, data, size);
     if(write(i2c_fd, buffer, size+1) != size+1){
-        printf("i2c write failed!\n");
+        printf("i2c write failed! in DATA\n");
     }
     free(buffer);
 }

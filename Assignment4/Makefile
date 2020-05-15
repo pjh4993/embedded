@@ -9,7 +9,7 @@ all: main
 	$(CROSS_COMPILE) -c -o $@ $< -g
 
 main: $(obj)
-	$(CROSS_COMPILE) -o $@ $< -g
+	$(CROSS_COMPILE) -o $@ $^ -g
 	
 clean:
 	rm -rf *.o
