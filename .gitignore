@@ -7,3 +7,4 @@ clear
 Module.*
 modules.*
 *.mod.*
+buildroot/*
