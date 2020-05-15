@@ -1,6 +1,9 @@
 #define S_WIDTH     128
 #define S_HEIGHT    64
 #define S_PAGES     (S_HEIGHT/8)
+#define LOGO_MOVE 4
+#define NUM_FRAMES (S_WIDTH/LOGO_MOVE) 
+#define LOGO_Y_LOC 1
 
 #include "skku.h"
 #include <stdint.h>
