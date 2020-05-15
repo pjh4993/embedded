@@ -31,7 +31,7 @@ void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len
 
 void handler(int sig) {
     static int i = 0; 
-    update_area_x_wrap(I2C_FD,data_s,i,LOGO_Y_LOCATION,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT);
+    update_area_x_wrap(I2C_FD,data_s,i,LOGO_Y_LOCATION,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT/8);
     i+=LOGO_MOVE; 
     if(i>=S_WIDTH)i=0;
 }
@@ -53,7 +53,7 @@ int main() {
 
     for(int i = 0; i < NUM_FRAMES; i ++) {
         for(int x = 0; x <LOGO_WIDTH ; x++) { 
-            for(int y = 0; y < LOGO_HEIGHT; y++) { 
+            for(int y = 0; y < LOGO_HEIGHT/8; y++) { 
                 int target_x = (i*LOGO_MOVE +x) % S_WIDTH; 
                 data[S_WIDTH*S_PAGES*i + S_WIDTH*(y+LOGO_Y_LOC)+ target_x] = skku[LOGO_WIDTH*y+x]; 
             } 
@@ -63,8 +63,8 @@ int main() {
     update_area(I2C_FD, data_i, 0, 0, 128, 64);
     free(data_i);
 
-    data_s = (uint8_t*)malloc((LOGO_WIDTH+LOGO_MOVE)*LOGO_HEIGHT);
-    for(int y = 0; y < LOGO_HEIGHT; y++) { 
+    data_s = (uint8_t*)malloc((LOGO_WIDTH+LOGO_MOVE)*LOGO_HEIGHT/8);
+    for(int y = 0; y < LOGO_HEIGHT/8; y++) { 
         for(int x = 0; x < LOGO_MOVE ; x++) { 
             data_s[(LOGO_WIDTH+LOGO_MOVE)*y+x] = 0x0; 
         } 
