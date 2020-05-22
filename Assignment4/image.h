@@ -11,9 +11,6 @@
 #define XLEN_SKKU 50
 #define YLEN_SKKU 48
 
-#include <stdio.h>
-#include <stdlib.h>
-
 typedef struct image {
     unsigned char* data;
     unsigned int   xlen;
