@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "image.h"
 
 const unsigned char font[96][6] = {

@@ -13,16 +13,10 @@
 #include <error.h>
 #include <errno.h>
 #include "image.h"
+#include "util.h"
 #define SSD1306_I2C_DEV 0x3C
 
 #define CATCH()     {if(errno != 0x0){ printf("error : %s",strerror(errno)); errno=0;}}
-
-void ssd1306_Init(int i2c_fd);
-void ssd1306_command(int i2c_fd, uint8_t cmd);
-void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size);
-void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len, int mode);
-void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
-
 
 void ssd1306_Init(int i2c_fd){
     ssd1306_command(i2c_fd, 0xA8);
@@ -92,6 +86,10 @@ void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y
     ssd1306_data(i2c_fd, data, x_len * y_len);
 }
 
+void paint_img(int i2c_fd, img* pimg){
+    update_area_x_wrap(i2c_fd, pimg->data, pimg->xpos, pimg->ypos, pimg->xlen, pimg->ylen);
+}
+
 void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len){
     if(x + x_len <= S_WIDTH){
         update_area(i2c_fd ,data ,x ,y ,x_len ,y_len, 0x00);
@@ -135,7 +133,7 @@ void update_overlap(img * front, img * back){
     for (int x = front->xlen; x < front->xlen + front->xspd; x++) {
         //unit is 1pixel x 1page
         for (int y = 0; y < front->ylen / 8; y++) {
-            int xpos = front->xpos + x;
+            int xpos = (front->xpos + x) %= S_WIDTH;
             int ypos = front->ypos + y;
             uint8_t overlap = 0; 
             //Check if target pos is in back image
