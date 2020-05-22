@@ -119,4 +119,32 @@ void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len
        free(part2_buf);
     }
 }
+/*
+typedef struct image{
+    uint8_t * data;
+    unsigned int xlen, ylen;
+    unsigned int xpos, ypos;
+}img;
 
+int speed = 4;
+*/
+
+//front is moving, background is fixed.
+void update_overlap(img * front, img * back){
+    for (int x = front->xlen; x < front->xlen + speed; x++) {
+        //unit is 1pixel x 1page
+        for (int y = 0; y < front->ylen / 8; y++) {
+            int xpos = front->xpos + x;
+            int ypos = front->ypos + y;
+            uint8_t overlap = 0; 
+            //Check if target pos is in back image
+            if((xpos >= back->xpos) && (xpos < back->xpos + back->xlen)
+                && (ypos >= back->ypos) && (ypos < back->ypos + back->ylen)){
+                //Set as backgroud image
+                overlap = back->data[back->xlen * (ypos - back->ypos) + (xpos - back->xpos)];
+                //overlap |= back->data[back->xlen * (ypos - back->ypos) + (xpos - back->xpos)];
+            };
+            front->data[front->xlen * y + x] = overlap;
+        }
+    }
+}
