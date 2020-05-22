@@ -28,7 +28,8 @@ void handler(int sig) {
     p_img_str->xpos = i;
     update_overlap(p_img_str, pimg_skku);
     paint_img(I2C_FD, p_img_str);
-    i+=p_img_str->xspd; 
+    //i+=p_img_str->xspd; 
+    i-=1; 
     if(i>=S_WIDTH)i=0;
 }
 
@@ -48,7 +49,7 @@ int main() {
     ssd1306_Init(I2C_FD);
 
     paint_img(I2C_FD, pimg_skku);
-    p_img_str = load_string("SKKU~",5);
+    p_img_str = load_string("SKKU",4);
     
 
     signal(SIGALRM, handler);

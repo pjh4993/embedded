@@ -87,7 +87,7 @@ void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y
 }
 
 void paint_img(int i2c_fd, img* pimg){
-    update_area_x_wrap(i2c_fd, pimg->data, pimg->xpos, pimg->ypos, pimg->xlen, pimg->ylen);
+    update_area_x_wrap(i2c_fd, pimg->data, pimg->xpos, (pimg->ypos)>>3, pimg->xlen, (pimg->ylen)>>3);
 }
 
 void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len){
@@ -134,13 +134,13 @@ void update_overlap(img * front, img * back){
         //unit is 1pixel x 1page
         for (int y = 0; y < front->ylen / 8; y++) {
             int xpos = (front->xpos + x) % S_WIDTH;
-            int ypos = front->ypos + y;
+            int ypos = front->ypos/8 + y;
             uint8_t overlap = 0; 
             //Check if target pos is in back image
             if((xpos >= back->xpos) && (xpos < back->xpos + back->xlen)
                 && (ypos >= back->ypos) && (ypos < back->ypos + back->ylen)){
                 //Set as backgroud image
-                overlap = back->data[back->xlen * (ypos - back->ypos) + (xpos - back->xpos)];
+                overlap = back->data[back->xlen * (ypos - back->ypos/8) + (xpos - back->xpos)];
                 //overlap |= back->data[back->xlen * (ypos - back->ypos) + (xpos - back->xpos)];
             };
             front->data[front->xlen * y + x] = overlap;
