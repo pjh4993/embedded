@@ -12,6 +12,7 @@
 #define YLEN_SKKU 48
 
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct image {
     unsigned char* data;
@@ -147,7 +148,7 @@ img img_skku = {
     skku,
     XLEN_SKKU,
     YLEN_SKKU,
-    0,
+    32,
     0,
     IMG_SPD
 };

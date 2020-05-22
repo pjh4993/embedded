@@ -5,7 +5,8 @@
 #define NUM_FRAMES (S_WIDTH/LOGO_MOVE) 
 #define LOGO_Y_LOC 1
 
-#include "skku.h"
+#include "image.h"
+#include "util.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,24 +19,18 @@
 
 #define SSD1306_I2C_DEV 0x3C
 
-uint8_t* data_s; 
 int I2C_FD;
-
-void ssd1306_Init(int i2c_fd);
-void ssd1306_command(int i2c_fd, uint8_t cmd);
-void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size);
-void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len, int mode);
-void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
-
-
+img* p_img_str;
 
 void handler(int sig) {
     static int i = 0; 
-    update_area_x_wrap(I2C_FD,data_s,i,LOGO_Y_LOC,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT/8);
-    update_area_x_wrap(I2C_FD,data_s,(i+LOGO_WIDTH/2)%S_WIDTH,LOGO_Y_LOC,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT/8);
-    i+=LOGO_MOVE; 
+    p_img_str->xpos = i;
+    update_overlap(p_img_str, pimg_skku);
+    paint_img(I2C_FD, p_img_str);
+    i+=p_img_str->xspd; 
     if(i>=S_WIDTH)i=0;
 }
+
 
 int main() {
     I2C_FD = open("/dev/i2c-1",O_RDWR);
@@ -51,28 +46,9 @@ int main() {
 
     ssd1306_Init(I2C_FD);
 
-    uint8_t* data_i = (uint8_t*) malloc(S_WIDTH*S_PAGES*NUM_FRAMES);
-
-    for(int i = 0; i < NUM_FRAMES; i ++) {
-        for(int x = 0; x <LOGO_WIDTH ; x++) { 
-            for(int y = 0; y < LOGO_HEIGHT/8; y++) { 
-                int target_x = (i*LOGO_MOVE +x) % S_WIDTH; 
-                data_i[S_WIDTH*S_PAGES*i + S_WIDTH*(y+LOGO_Y_LOC)+ target_x] = skku[LOGO_WIDTH*y+x]; 
-            } 
-        } 
-    };
+    paint_img(I2C_FD, pimg_skku);
+    p_img_str = load_string("SKKU~",5);
     
-    update_area(I2C_FD, data_i, 0, 0, 128, 8, 0x00);
-    free(data_i);
-    data_s = (uint8_t*)malloc((LOGO_WIDTH+LOGO_MOVE)*LOGO_HEIGHT/8);
-    for(int y = 0; y < LOGO_HEIGHT/8; y++) { 
-        for(int x = 0; x < LOGO_MOVE ; x++) { 
-            data_s[(LOGO_WIDTH+LOGO_MOVE)*y+x] = 0x0; 
-        } 
-        for(int x = 0; x < LOGO_WIDTH ; x++) {
-            data_s[(LOGO_WIDTH+LOGO_MOVE)*y+(x+LOGO_MOVE)] = skku[LOGO_WIDTH*y+x]; 
-        }
-    }
 
     signal(SIGALRM, handler);
     ualarm(20000, 20000);
@@ -81,7 +57,6 @@ int main() {
         sleep(1);
     }
     
-    free(data_s);
     close(I2C_FD); 
     return 0;
 }
