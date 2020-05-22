@@ -132,18 +132,18 @@ int speed = 4;
 void update_overlap(img * front, img * back){
     for (int x = front->xlen; x < front->xlen + front->xspd; x++) {
         //unit is 1pixel x 1page
-        for (int y = 0; y < front->ylen / 8; y++) {
+        for (int y = 0; y < front->ylen; y += 8) {
             int xpos = (front->xpos + x) % S_WIDTH;
-            int ypos = front->ypos/8 + y;
+            int ypos = front->ypos + y;
             uint8_t overlap = 0; 
             //Check if target pos is in back image
             if((xpos >= back->xpos) && (xpos < back->xpos + back->xlen)
                 && (ypos >= back->ypos) && (ypos < back->ypos + back->ylen)){
                 //Set as backgroud image
-                overlap = back->data[back->xlen * (ypos - back->ypos/8) + (xpos - back->xpos)];
-                //overlap |= back->data[back->xlen * (ypos - back->ypos) + (xpos - back->xpos)];
-            };
-            front->data[front->xlen * y + x] = overlap;
+                overlap = back->data[back->xlen * (ypos - back->ypos) / 8 + (xpos - back->xpos)];
+                //overlap |= back->data[back->xlen * (ypos - back->ypos)/8 + (xpos - back->xpos)];
+            }
+            front->data[front->xlen * (y / 8) + x] = overlap;
         }
     }
 }
