@@ -12,6 +12,7 @@
 #include <linux/i2c-dev.h>
 #include <error.h>
 #include <errno.h>
+#include "image.h"
 #define SSD1306_I2C_DEV 0x3C
 
 #define CATCH()     {if(errno != 0x0){ printf("error : %s",strerror(errno)); errno=0;}}
@@ -131,7 +132,7 @@ int speed = 4;
 
 //front is moving, background is fixed.
 void update_overlap(img * front, img * back){
-    for (int x = front->xlen; x < front->xlen + speed; x++) {
+    for (int x = front->xlen; x < front->xlen + front->xspd; x++) {
         //unit is 1pixel x 1page
         for (int y = 0; y < front->ylen / 8; y++) {
             int xpos = front->xpos + x;
