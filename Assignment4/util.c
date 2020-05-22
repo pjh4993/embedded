@@ -133,7 +133,7 @@ void update_overlap(img * front, img * back){
     for (int x = front->xlen; x < front->xlen + front->xspd; x++) {
         //unit is 1pixel x 1page
         for (int y = 0; y < front->ylen / 8; y++) {
-            int xpos = front->xpos + x;
+            int xpos = (front->xpos + x) %= S_WIDTH;
             int ypos = front->ypos + y;
             uint8_t overlap = 0; 
             //Check if target pos is in back image
