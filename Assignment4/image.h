@@ -1,3 +1,6 @@
+#ifndef IMAGE_H
+#define IMAGE_H
+
 #define IMG_SPD   5
 
 #define SIZE_FONT 6
@@ -173,3 +176,5 @@ img* load_string(const char* str, size_t n) {
     }
     return img_str;
 }
+
+#endif
