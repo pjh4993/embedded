@@ -21,6 +21,7 @@
 
 int I2C_FD;
 img* p_img_str;
+extern img* pimg_skku;
 
 void handler(int sig) {
     static int i = 0; 

@@ -2,7 +2,7 @@ BUILDROOT_OUTPUT=/embedded/buildroot/output
 KERNEL_DIR=$(BUILDROOT_OUTPUT)/build/linux-custom/
 CROSS_COMPILE=$(BUILDROOT_OUTPUT)/host/bin/arm-linux-gcc
 
-src=main.o util.o
+src=main.o util.o image.o
 all: main
 
 %.o: %.c

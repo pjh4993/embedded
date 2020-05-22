@@ -1,5 +1,6 @@
 #ifndef IMAGE_H
 #define IMAGE_H
+#include <stdlib.h>
 
 #define IMG_SPD   5
 
@@ -19,18 +20,6 @@ typedef struct image {
     unsigned int   ypos;
     int            xspd;
 } img;
-
-img img_skku = {
-    skku,
-    XLEN_SKKU,
-    YLEN_SKKU,
-    32,
-    0,
-    IMG_SPD
-};
-
-img* pimg_skku = &img_skku;
-
 img* load_string(const char*, size_t);
 
 #endif

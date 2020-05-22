@@ -123,6 +123,17 @@ const unsigned char skku []={
     0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
+img img_skku = {
+    skku,
+    XLEN_SKKU,
+    YLEN_SKKU,
+    32,
+    0,
+    IMG_SPD
+};
+
+img* pimg_skku = &img_skku;
+
 img* load_string(const char* str, size_t n) {
     unsigned int i, j;
     img* img_str = (img*)malloc(sizeof(img));
