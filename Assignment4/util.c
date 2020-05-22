@@ -130,7 +130,7 @@ int speed = 4;
 
 //front is moving, background is fixed.
 void update_overlap(img * front, img * back){
-    for (int x = front->xlen; x < front->xlen + front->xspd; x++) {
+    for (int x = front->xlen - front->xspd; x < front->xlen; x++) {
         //unit is 1pixel x 1page
         for (int y = 0; y < front->ylen; y += 8) {
             int xpos = (front->xpos + x) % S_WIDTH;
