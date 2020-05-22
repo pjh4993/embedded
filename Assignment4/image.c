@@ -138,7 +138,7 @@ img* load_string(const char* str, size_t n) {
     unsigned int i, j;
     img* img_str = (img*)malloc(sizeof(img));
     img_str->data = (unsigned char*)malloc(n*SIZE_FONT+IMG_SPD);
-    img_str->xlen = XLEN_FONT*SIZE_FONT + IMG_SPD;
+    img_str->xlen = n*XLEN_FONT + IMG_SPD;
     img_str->ylen = YLEN_FONT;
     img_str->xpos = 0;
     img_str->ypos = 0;
