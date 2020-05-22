@@ -14,10 +14,12 @@
 #include <errno.h>
 #define SSD1306_I2C_DEV 0x3C
 
+#define CATCH()     {if(errno != 0x0){ printf("error : %s",strerror(errno)); errno=0;}}
+
 void ssd1306_Init(int i2c_fd);
 void ssd1306_command(int i2c_fd, uint8_t cmd);
 void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size);
-void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
+void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len, int mode);
 void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
 
 
@@ -60,14 +62,12 @@ void ssd1306_command(int i2c_fd, uint8_t cmd){
     buffer[0] = (0<<7) | (0<<6);
     buffer[1] = cmd;
     int len = write(i2c_fd, buffer, 2);
-    if(len != 2){
-        printf("i2c write failed in CMD %d\n",len);
-        printf("error : %s",strerror(errno));
-    }
+    CATCH();
 }
 
 void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size){
     uint8_t* buffer = (uint8_t*)malloc(size+1);
+    CATCH();
     buffer[0] = (0<<7) | (1<<6);
     memcpy(buffer + 1, data, size);
     if(write(i2c_fd, buffer, size+1) != size+1){
@@ -76,9 +76,9 @@ void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size){
     free(buffer);
 }
 
-void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len){
+void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len, int mode){
     ssd1306_command(i2c_fd, 0x20);
-    ssd1306_command(i2c_fd, 0x0);
+    ssd1306_command(i2c_fd, mode);
     
     ssd1306_command(i2c_fd, 0x21);
     ssd1306_command(i2c_fd, x);
@@ -93,7 +93,7 @@ void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y
 
 void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len){
     if(x + x_len <= S_WIDTH){
-        update_area(i2c_fd ,data ,x ,y ,x_len ,y_len);
+        update_area(i2c_fd ,data ,x ,y ,x_len ,y_len, 0x00);
     }else{
         int part1_len = S_WIDTH-x;
         int part2_len = x_len - part1_len;
@@ -103,17 +103,17 @@ void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len
 
         for(int x = 0; x < part1_len; x++) {
             for(int y = 0; y < y_len; y++) {
-                part1_buf[part1_len*y+x] = data[x_len*y+x];
+                part1_buf[y_len*x+y] = data[x_len*y+x];
             }
         }
 
         for(int x = 0; x < part2_len; x++) {
             for(int y = 0; y < y_len; y++) {
-                part2_buf[part2_len*y+x] = data[x_len*y+part1_len+x];
+                part2_buf[y_len*x+y] = data[x_len*y+part1_len+x];
             }
         }
-       update_area(i2c_fd, part1_buf, x, y,part1_len, y_len);
-       update_area(i2c_fd, part2_buf, 0, y,part2_len, y_len);
+       update_area(i2c_fd, part1_buf, x, y,part1_len, y_len, 0x01);
+       update_area(i2c_fd, part2_buf, 0, y,part2_len, y_len, 0x01);
 
        free(part1_buf);
        free(part2_buf);

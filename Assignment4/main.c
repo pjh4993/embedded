@@ -18,13 +18,13 @@
 
 #define SSD1306_I2C_DEV 0x3C
 
-uint8_t* data_s;
+uint8_t* data_s; 
 int I2C_FD;
 
 void ssd1306_Init(int i2c_fd);
 void ssd1306_command(int i2c_fd, uint8_t cmd);
 void ssd1306_data(int i2c_fd, const uint8_t* data, size_t size);
-void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
+void update_area(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len, int mode);
 void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len, int y_len);
 
 
@@ -32,12 +32,13 @@ void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len
 void handler(int sig) {
     static int i = 0; 
     update_area_x_wrap(I2C_FD,data_s,i,LOGO_Y_LOC,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT/8);
+    update_area_x_wrap(I2C_FD,data_s,(i+LOGO_WIDTH/2)%S_WIDTH,LOGO_Y_LOC,LOGO_WIDTH+LOGO_MOVE,LOGO_HEIGHT/8);
     i+=LOGO_MOVE; 
     if(i>=S_WIDTH)i=0;
 }
 
 int main() {
-    int I2C_FD = open("/dev/i2c-1",O_RDWR);
+    I2C_FD = open("/dev/i2c-1",O_RDWR);
     printf("I2C_FD %d\n",I2C_FD);
     if(I2C_FD < 0) { 
         printf("err opening device\n"); 
@@ -61,7 +62,7 @@ int main() {
         } 
     };
     
-    update_area(I2C_FD, data_i, 0, 0, 128, 8);
+    update_area(I2C_FD, data_i, 0, 0, 128, 8, 0x00);
     free(data_i);
     data_s = (uint8_t*)malloc((LOGO_WIDTH+LOGO_MOVE)*LOGO_HEIGHT/8);
     for(int y = 0; y < LOGO_HEIGHT/8; y++) { 

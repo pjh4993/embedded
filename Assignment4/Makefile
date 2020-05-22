@@ -6,10 +6,10 @@ obj=util.o main.o
 all: main
 
 %.o: %.c
-	$(CROSS_COMPILE) -c -o $@ $< -g
+	$(CROSS_COMPILE) -c -o $@ $< -g $(CFLGAS)
 
 main: $(obj)
-	$(CROSS_COMPILE) -o $@ $^ -g
+	$(CROSS_COMPILE) -o $@ $^ -g $(CFLAGS)
 	
 clean:
 	rm -rf *.o
