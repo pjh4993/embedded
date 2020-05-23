@@ -112,7 +112,7 @@ void update_area_x_wrap(int i2c_fd, const uint8_t* data, int x, int y, int x_len
             }
         }
        update_area(i2c_fd, part1_buf, x, y,part1_len, y_len, 0x01);
-       update_area(i2c_fd, part2_buf, 0, y,part2_len, y_len, 0x01);
+       update_area(i2c_fd, part2_buf, 0, y-1 < 0?7:y-1,part2_len, y_len, 0x01);
 
        free(part1_buf);
        free(part2_buf);
