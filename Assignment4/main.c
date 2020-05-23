@@ -28,11 +28,13 @@ void handler(int sig) {
     p_img_str->xpos = i;
     update_overlap(p_img_str, pimg_skku);
     paint_img(I2C_FD, p_img_str);
-    //i+=p_img_str->xspd; 
-    i-=1; 
-    if(i>=S_WIDTH)i=0;
+    i-=p_img_str->xspd; 
+    if(i<=0){
+//0 init
+        i=S_WIDTH;
+        p_img_str->ypos += 8;
+    }
 }
-
 
 int main() {
     I2C_FD = open("/dev/i2c-1",O_RDWR);
@@ -50,13 +52,12 @@ int main() {
 
     paint_img(I2C_FD, pimg_skku);
     p_img_str = load_string("SKKU",4);
+    p_img_str->xpos=S_WIDTH;
     
 
-    signal(SIGALRM, handler);
-    ualarm(20000, 20000);
-
     while(1){
-        sleep(1);
+        usleep(40000);
+        handler(0);
     }
     
     close(I2C_FD); 
