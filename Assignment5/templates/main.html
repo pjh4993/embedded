@@ -10,8 +10,8 @@
         </header>
         <main>
             <form action="{{ url_for('reset') }}" method="POST">
-                <p name="left">{{ count_left }}</p>
-                <p name="right">{{ count_right }}</p>
+                <p name="left">{{ sub.cnt0 }}</p>
+                <p name="right">{{ sub.cnt1 }}</p>
                 <button type="submit"> Reset counts </button>
             </form>
         </main>
