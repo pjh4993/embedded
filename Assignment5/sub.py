@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+import threading
 
 cnt0 = 0
 cnt1 = 0
@@ -17,6 +18,9 @@ def on_message (clinet, userdata, msg):
         elif ch == '1' :
             cnt1 += 1
 
+def loopforever(c) :
+    c.loop_forever()
+
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
@@ -25,7 +29,10 @@ client.on_message = on_message
 #client.tls_set('ca.crt')
 #client.username_pw_set("test","test)
 
-client.connect("192.168.1.1", 8883, 60)
-client.loop_forever()
+client.connect("127.0.0.1", 1883, 60)
+
+thread = threading.Thread(target=loopforever, args=(client,))
+
+
 
 
