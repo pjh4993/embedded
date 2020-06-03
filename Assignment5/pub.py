@@ -7,7 +7,7 @@ client = mqtt.Client()
 #client.tls_set('ca.crt')
 #client.username_pw_set("test", "test")
 
-client.connect("127.0.0.1", 1883)
+client.connect("127.0.0.1", 8888)
 client.loop_start()
 
 while True:

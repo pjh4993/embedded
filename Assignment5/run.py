@@ -10,11 +10,11 @@ def main_page():
     print (sub.cnt1)
     return render_template("main.html", cnt0=sub.cnt0, cnt1=sub.cnt1) 
 
-@app.route('/reset') 
+@app.route('/', methods=['POST']) 
 def reset():
     sub.cnt0 = 0
     sub.cnt1 = 0
     return render_template("main.html", cnt0=sub.cnt0, cnt1=sub.cnt1) 
 
 if __name__ == "__main__" :
-    app.run(host = "0.0.0.0", debug = True)
+    app.run(host = "0.0.0.0", port=20002, debug = True)
