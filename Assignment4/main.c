@@ -21,19 +21,37 @@
 
 int I2C_FD;
 img* p_img_str;
+unsigned char zero[S_WIDTH * S_HEIGHT];
+img blank_img = {zero, S_WIDTH, S_HEIGHT,0,0};
 extern img* pimg_skku;
 
 void handler(int sig) {
     static int i = 0; 
+    static int j = 1;
     p_img_str->xpos = i;
     update_overlap(p_img_str, pimg_skku);
     paint_img(I2C_FD, p_img_str);
     i-=p_img_str->xspd; 
     if(i<=0){
 //0 init
+        memset(zero,0,p_img_str->xlen);
         i=S_WIDTH;
+        blank_img = *p_img_str;
+        blank_img.data = zero;
+//paint_img(I2C_FD, &blank_img);
         p_img_str->ypos += 8;
+        if(p_img_str->ypos >= 64){
+            p_img_str->ypos = 0;
+            pimg_skku->xpos+=5 * j;
+            if(pimg_skku->xpos + pimg_skku->xlen >= S_WIDTH){
+                j = -1;
+            }else if(pimg_skku->xpos <= 32){
+                j = 1;
+            }
+            paint_img(I2C_FD, pimg_skku);
+        }
     }
+
 }
 
 int main() {
@@ -49,14 +67,14 @@ int main() {
     }
 
     ssd1306_Init(I2C_FD);
-
+    paint_img(I2C_FD, &blank_img);
     paint_img(I2C_FD, pimg_skku);
-    p_img_str = load_string("SKKU",4);
+    p_img_str = load_string("SKKU GYUL",sizeof("SKKU GYUL"));
     p_img_str->xpos=S_WIDTH;
     
 
     while(1){
-        usleep(40000);
+        usleep(20000);
         handler(0);
     }
     

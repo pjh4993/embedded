@@ -127,7 +127,7 @@ img img_skku = {
     skku,
     XLEN_SKKU,
     YLEN_SKKU,
-    32,
+    70,
     0,
     IMG_SPD
 };
@@ -146,9 +146,11 @@ img* load_string(const char* str, size_t n) {
 
     for(i=0; i<n; ++i) {
         for(j=0; j<XLEN_FONT; ++j) {
-            if(str[i]-32>=0 && str[i]-32<96)
+            if(str[i]-32>=0 && str[i]-32<96){
                 img_str->data[i*XLEN_FONT+j] = font[str[i]-32][j];
-            else {
+            }else if(str[i] == 0){
+                img_str->data[i*XLEN_FONT+j] = font[0][j];
+            }else {
                 fprintf(stderr, "Wrong character %c(%d)\n", str[i], str[i]);
                 exit(1);
             }
