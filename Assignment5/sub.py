@@ -25,12 +25,13 @@ def loopclient(c) :
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+client.tls_set('/root/Assignment5/cert/ca.crt')
+client.username_pw_set("sysadmin", "1234")
 
-#CA
-#client.tls_set('ca.crt')
-#client.username_pw_set("test","test)
 
-client.connect("127.0.0.1", 8888, 60)
-thread = threading.Thread(target=loopclient, args=(client,))
-thread.start()
+def run():
+    client.connect("192.168.2.1", 8888, 60)
+    thread = threading.Thread(target=loopclient, args=(client,))
+    thread.start()
 
+run()
