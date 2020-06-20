@@ -12,7 +12,7 @@ def on_message (clinet, userdata, msg) :
     global cnt0
     global cnt1
     data = str(msg.payload)
-    #print("Recieved : " + msg.payload)
+    print("Recieved : " + msg.payload)
     for ch in data :
         if ch == '0' :
             cnt0 = cnt0 + 1
@@ -25,7 +25,7 @@ def loopclient(c) :
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.tls_set('/root/Assignment5/cert/ca.crt')
+#client.tls_set('/root/Assignment5/cert/ca.crt')
 client.username_pw_set("sysadmin", "1234")
 
 
