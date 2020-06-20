@@ -20,6 +20,7 @@ typedef struct image {
     unsigned int   xpos;
     unsigned int   ypos;
     int            xspd;
+    int            yspd;
 } img;
 img* load_string(const char*, size_t);
 

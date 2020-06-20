@@ -414,7 +414,8 @@ img img_ani = {
     imageHeight,
     0,
     0,
-    0
+    2,
+    1
 };
 
 img* pimg_skku = &img_skku;

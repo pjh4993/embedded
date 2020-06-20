@@ -25,33 +25,26 @@ unsigned char zero[2 * imageHeight];
 img blank_img = {zero, 2 , imageHeight,0,0,0};
 extern img* pimg_skku;
 extern img* pimg_ani;
+Render rend;
 extern unsigned char *ani_set[];
 
 void handler(int sig) {
-    static int i = 0; 
-    static int j = 1;
-    static unsigned char *prev = NULL;
-    int ti, tj;
-    printf("%d\n",blank_img.xpos);
-    blank_img.xpos = (pimg_ani->xpos!=0) ? pimg_ani->xpos - 2 : 0;
-    paint_img(I2C_FD, &blank_img);
+    int i, j;
+    init_rend(&rend);
+    //take every change 
+    paint_rend(&rend, pimg_ani);
     
-    
-    if(prev != NULL){
-
-
+    //paint only effective 
+    /*
+    for(i=0; i<16; i++){
+        if(rend.effected[i]){
+            paint_rend_img(I2C_FD, &rend, 0, i);
         }
     }
-    paint_img(I2C_FD, pimg_ani);
-    prev = pimg_ani->data;
-    i++;
-    pimg_ani->data = ani_set[i%7];
-    pimg_ani->xpos += 2;
-    
-    if(pimg_ani->xpos > 70)
-        pimg_ani->xpos = 0;
-        blank_img.xpos = 0;
-
+    */
+    paint_rend_img(I2C_FD, &rend, 0, 0);
+    pimg_ani->xpos += pimg_ani->xspd;
+    pimg_ani->ypos += pimg_ani->yspd;
 }
 
 int main() {
