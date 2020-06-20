@@ -1,7 +1,8 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 #include <stdlib.h>
-
+#define imageWidth 50
+#define imageHeight 50
 #define IMG_SPD   5
 
 #define SIZE_FONT 6
