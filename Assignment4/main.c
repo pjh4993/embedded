@@ -21,36 +21,36 @@
 
 int I2C_FD;
 img* p_img_str;
-unsigned char zero[S_WIDTH * S_HEIGHT];
-img blank_img = {zero, S_WIDTH, S_HEIGHT,0,0};
+unsigned char zero[2 * imageHeight];
+img blank_img = {zero, 2 , imageHeight,0,0,0};
 extern img* pimg_skku;
+extern img* pimg_ani;
+extern unsigned char *ani_set[];
 
 void handler(int sig) {
     static int i = 0; 
     static int j = 1;
-    p_img_str->xpos = i;
-    update_overlap(p_img_str, pimg_skku);
-    paint_img(I2C_FD, p_img_str);
-    i-=p_img_str->xspd; 
-    if(i<=0){
-//0 init
-        memset(zero,0,p_img_str->xlen);
-        i=S_WIDTH;
-        blank_img = *p_img_str;
-        blank_img.data = zero;
-//paint_img(I2C_FD, &blank_img);
-        p_img_str->ypos += 8;
-        if(p_img_str->ypos >= 64){
-            p_img_str->ypos = 0;
-            pimg_skku->xpos+=5 * j;
-            if(pimg_skku->xpos + pimg_skku->xlen >= S_WIDTH){
-                j = -1;
-            }else if(pimg_skku->xpos <= 32){
-                j = 1;
-            }
-            paint_img(I2C_FD, pimg_skku);
+    static unsigned char *prev = NULL;
+    int ti, tj;
+    printf("%d\n",blank_img.xpos);
+    blank_img.xpos = (pimg_ani->xpos!=0) ? pimg_ani->xpos - 2 : 0;
+    paint_img(I2C_FD, &blank_img);
+    
+    
+    if(prev != NULL){
+
+
         }
     }
+    paint_img(I2C_FD, pimg_ani);
+    prev = pimg_ani->data;
+    i++;
+    pimg_ani->data = ani_set[i%7];
+    pimg_ani->xpos += 2;
+    
+    if(pimg_ani->xpos > 70)
+        pimg_ani->xpos = 0;
+        blank_img.xpos = 0;
 
 }
 

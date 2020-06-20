@@ -10,3 +10,4 @@ modules.*
 buildroot/*
 sdcard
 *.tar
+*true*

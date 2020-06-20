@@ -11,8 +11,8 @@ def on_connect (client, userdata, flags, rc) :
 def on_message (clinet, userdata, msg) :
     global cnt0
     global cnt1
-    data = str(msg.payload)
-    print("Recieved : " + msg.payload)
+    data = msg.payload.decode('ASCII')
+    print("Recieved : " + data)
     for ch in data :
         if ch == '0' :
             cnt0 = cnt0 + 1
