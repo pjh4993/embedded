@@ -1,4 +1,4 @@
-BUILDROOT_OUTPUT=/embedded/buildroot/output
+BUILDROOT_OUTPUT=/embedded/embedded/buildroot/output
 KERNEL_DIR=$(BUILDROOT_OUTPUT)/build/linux-custom/
 CROSS_COMPILE=$(BUILDROOT_OUTPUT)/host/bin/arm-linux-
 

@@ -41,92 +41,18 @@ static int rpikey_release(struct inode *inode, struct file *file) {
     return 0;
 }
 
-//일단 ppt 복붙
-long rpikey_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
-    if (ioctl_num == 101){//write
-        uint32_t param_value[2]; 
-        param_value[0] = gpio_get_value(20); 
-        param_value[1] = gpio_get_value(21);
-        copy_to_user((void*) ioctl_param, (void*) param_value, sizeof(uint32_t)*2);
-    }
-    
-    if (ioctl_num == 100){//read
-        uint32_t param_value[3];
-        int gpio13;
-        int gpio19;
-        int gpio26;
-
-        copy_from_user((void*) param_value, (void*) ioctl_param, sizeof(uint32_t)*3);
-
-        gpio13 = (int)param_value[0];
-        gpio19 = (int)param_value[1];
-        gpio26 = (int)param_value[2];
-
-        gpio_set_value(13,gpio13);
-        gpio_set_value(19,gpio19);
-        gpio_set_value(26,gpio26);
-    }
-    return 0;
-}
-
-char buf[1024];
-int buf_btm = 0;
-int buf_top = 0;
+#define BTN_CNT 4
+char btn_id[BTN_CNT+1];
 
 ssize_t rpikey_read(struct file *fp, char __user * buffer, size_t size, loff_t * off) {
-    size_t len = buf_top > size ? size : buf_top;
-    pr_info("read started\n");
-    buf[len] = '\0';
-    pr_info("%s %d\n",buf,size);
-    copy_to_user(buffer, buf, len);
-
-    pr_info("read size : %d\n",len);
-    buf_top = 0;
-    return len;
+	btn_id[BTN_CNT] = '\0';
+    copy_to_user(buffer, btn_id, BTN_CNT);
+    memset(btn_id, 0, BTN_CNT);
+    return BTN_CNT;
 }
-
-ssize_t rpikey_write(struct file *fp, const char __user * buffer, size_t size, loff_t * off) {
-  size_t it=0;
-  char user_buffer[size];
-  pr_info("size of input %d\n",size);
-  //fail to read from user space
-  if(copy_from_user((void*)user_buffer, (void*)buffer, size))
-    return -EFAULT;
-
-  int gpio13, gpio19, gpio26;
-  for (it = 0; it < size; it++){
-    gpio13 = 0;//b
-    gpio19 = 0;//g
-    gpio26 = 0;//r
-    char c = user_buffer[it];
-
-    if (c == 'r') {
-      gpio26 = 1;
-    } else if (c == 'g') {
-      gpio19 = 1;
-    } else if (c == 'b') {
-      gpio13 = 1;
-    } else if (c != 'o'){
-      continue;
-    }
-
-    gpio_set_value(13, gpio13);
-    gpio_set_value(19, gpio19);
-    gpio_set_value(26, gpio26);
-    pr_info("b:%d g:%d r:%d\n",gpio13, gpio19, gpio26);
-    size_t it1=0;
-    for(;it1 < 1000; it1++){
-        udelay(1000);
-    }
-  }
-  return it;
-}
-
 struct file_operations key_fops = {
-    .unlocked_ioctl = rpikey_ioctl,
     .open = rpikey_open,
     .read = rpikey_read,
-    .write = rpikey_write, 
     .release = rpikey_release,
 };
 typedef struct Device {
@@ -148,12 +74,8 @@ static struct class *cRpiKeyClass;
 
 static irqreturn_t irq_handler(int irq, void *dev_id) {
     pr_info("irq handled %d\n",((device*)dev_id)->device_id);
-    if(dev_id == &dev_id_gpio20)
-        buf[buf_top] = '0';
-    else
-        buf[buf_top] = '1';
-    buf_top = (buf_top + 1) & 1023;
-    pr_info("buf_top cur : %d\n",buf_top);
+    int id = ((device*)dev_id)->device_id;
+    btn_id[id%20] = 1;
     return IRQ_HANDLED;
 }
 
@@ -169,15 +91,8 @@ static int __init rpikey_init(void) {
     cRpiKeyClass = class_create(THIS_MODULE, CLASS_NAME);
     device_create(cRpiKeyClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
 
-    gpio_request(13, "gpio13");
-    gpio_request(19, "gpio19");
-    gpio_request(26, "gpio26");
     gpio_request(20, "gpio20");
     gpio_request(21, "gpio21");
-
-    gpio_direction_output(13, 0);
-    gpio_direction_output(19, 0);
-    gpio_direction_output(26, 0);
 
     gpio_direction_input(20);
     gpio_direction_input(21);
@@ -201,9 +116,6 @@ static int __init rpikey_init(void) {
 static void __exit rpikey_exit(void) {
     iounmap(gpio_ctr);
 
-    gpio_free(13);
-    gpio_free(19);
-    gpio_free(26);
     gpio_free(20);
     gpio_free(21);
 
